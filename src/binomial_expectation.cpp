@@ -5,17 +5,36 @@ double binomial_expectation_loop(double *spread, double p, unsigned int n) {
     std::vector<double> arr(n + 1, 0.0);
 
     // set up the base nodes
+    for (unsigned int i=0; i<n+1; i++)
+    {
+        arr[i] = spread[i];
+    }
     // loop through each depth
-    // loop through each node at depth i
-
+    for (int i=(int)n-1; i>=0; i--)
+    {
+        // loop through each node at depth i
+        // for (unsigned int j=0; j<2; j++)
+        // {
+        //     arr[i] = (1.0-p)*arr[i+j] + p*arr[i+j+1];
+        // } --> this doesnt work
+        for (unsigned int j = 0; j<i+1; j++){
+            arr[j] = (1.0-p)*arr[j] + p*arr[j+1];
+        }
+    }
     double answer = arr[0];
     return answer;
 }
 
 double binomial_expectation_recursion_h(
     unsigned int i, unsigned int j, double *spread, double p, unsigned int n) {
-    // if (i == n)
-    // if (i < n)
+    if (i == n){
+        return spread[j];
+    }
+    if (i < n){
+        // V(i,j) = (1-p)V(i+1,j) + pV(i+1,j+1)  <<-- this is the reccurence relationship
+        return (1.0-p)*binomial_expectation_recursion_h(i+1, j, spread, p, n) + 
+        p*binomial_expectation_recursion_h(i+1, j+1, spread, p, n);
+    }
     return 0.0;
 }
 
@@ -63,4 +82,13 @@ void expected_returns(double S0,
     double d = 1.0 / u;
 
     // populate the output arrays
+    for (size_t i = 0; i < spread_points; i++){
+        out_spread[i] = d + (u-d)*i/(spread_points-1);
+        out_risk_neutral_rate[i] = std::log(out_spread[i])/delta_t;
+        out_probability[i] = (out_spread[i] - d)/(u-d);
+        out_returns[i] = S0*expected_returns(S0, number_of_periods, volatility, time_period, out_spread[i]);
+    }
+
 }
+
+//  can use the same function name -- called function overloading -- they are treated as two different functions as their parameters are different
